@@ -50,6 +50,12 @@ function connectFailure(error: unknown): string {
 }
 
 async function main(): Promise<boolean> {
+  // On Render (which sets RENDER=true) the app creates missing tables itself
+  // on first request, and the build step may not reach a private database.
+  if (process.env.RENDER) {
+    console.log("Skipping db:setup on Render — the app creates the sim_* tables on first use.");
+    return true;
+  }
   if (existsSync(".env")) loadEnvFile(".env");
   const raw = process.env.DATABASE_URL;
   if (!raw) {
