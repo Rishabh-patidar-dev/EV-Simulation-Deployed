@@ -1,0 +1,42 @@
+import {
+  BadgeCheck,
+  Calculator,
+  ClipboardCheck,
+  Clock,
+  FileWarning,
+  Landmark,
+  LifeBuoy,
+  PackageSearch,
+  PackageX,
+  PhoneCall,
+  Receipt,
+  ShieldPlus,
+  ShoppingCart,
+  Truck,
+  UserRoundPlus,
+  Workflow,
+  Wrench,
+  type LucideIcon,
+} from "lucide-react";
+import type { NotificationType } from "@/lib/notifications";
+
+/** One icon per notification type — shared by the bell and the Notifications page. */
+export const NOTIFICATION_ICON: Record<NotificationType, LucideIcon> = {
+  lead_unassigned: UserRoundPlus,
+  followup_overdue: PhoneCall,
+  order_waiting: ShoppingCart,
+  order_late: Clock,
+  order_short: PackageX,
+  invoice_overdue: Receipt,
+  compliance_expired: FileWarning,
+  approval_pending: ClipboardCheck,
+  claim_review: ShieldPlus,
+  stock_low: PackageSearch,
+  ticket_breach: LifeBuoy,
+  loan_stalled: Landmark,
+  delivery_overdue: Truck,
+  tp_expiring: BadgeCheck,
+  job_overdue: Wrench,
+  sync_failed: Calculator,
+  onboarding_stalled: Workflow,
+};

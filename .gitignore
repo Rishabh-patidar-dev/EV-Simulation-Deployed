@@ -1,0 +1,254 @@
+# ===========================================================================
+# EV-Simulation — files that must never be committed.
+# Sections run from most to least dangerous to leak.
+# ===========================================================================
+
+# ---------------------------------------------------------------------------
+# Secrets & environment
+# SUPABASE_SERVICE_ROLE_KEY bypasses RLS on the shared CRM project, so every
+# env-file variant is ignored. Only the placeholder template is tracked.
+# ---------------------------------------------------------------------------
+.env
+.env.*
+*.env
+!.env.example
+.envrc
+.dev.vars
+secrets/
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+*.jks
+*.keystore
+id_rsa*
+id_ed25519*
+credentials.json
+service-account*.json
+*-credentials.json
+.npmrc
+.yarnrc
+.netrc
+
+# ---------------------------------------------------------------------------
+# AI assistants / coding agents — local instructions, memory, settings, caches
+# (`next dev` rewrites AGENTS.md and CLAUDE.md on every start, too).
+# The wildcard rows at the end of each group catch tools not listed yet.
+# ---------------------------------------------------------------------------
+# Claude / Claude Code
+CLAUDE.md
+CLAUDE.local.md
+.claude/
+.claude*
+.mcp.json
+# Cross-tool agent instructions
+AGENTS.md
+AGENT.md
+.agents/
+.agent/
+# Cursor
+.cursor/
+.cursorrules
+.cursorignore
+.cursorindexingignore
+# GitHub Copilot
+.github/copilot-instructions.md
+.github/instructions/
+.github/prompts/
+.github/chatmodes/
+.copilot/
+# Gemini
+GEMINI.md
+.gemini/
+# OpenAI Codex
+.codex/
+CODEX.md
+# Windsurf / Codeium
+.windsurf/
+.windsurfrules
+.codeium/
+# Cline / Roo / Kilo
+.clinerules
+.clinerules/
+.cline/
+.roo/
+.roomodes
+.kilocode/
+# Aider
+.aider*
+# Continue
+.continue/
+# Amazon Q / Kiro
+.amazonq/
+.kiro/
+# JetBrains Junie / AI
+.junie/
+.aiassistant/
+# Augment, Tabnine, Sourcegraph Cody, Zed, OpenCode, Qwen, Trae, Goose
+.augment/
+.augment-guidelines
+.tabnine/
+.cody/
+.zed/
+.opencode/
+opencode.json
+QWEN.md
+.qwen/
+.trae/
+.goosehints
+.goose/
+# Generic catch-alls for future agents and tools
+*.agent.md
+*.prompt.md
+*.chatmode.md
+*.instructions.md
+.ai/
+.llm/
+.prompts/
+.specstory/
+.history/
+
+# ---------------------------------------------------------------------------
+# Dependencies
+# ---------------------------------------------------------------------------
+node_modules/
+.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+bower_components/
+jspm_packages/
+.npm/
+.pnpm-store/
+
+# ---------------------------------------------------------------------------
+# Next.js / build output
+# ---------------------------------------------------------------------------
+.next/
+/out/
+/build/
+/dist/
+next-env.d.ts
+*.tsbuildinfo
+.turbo/
+.swc/
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+
+# ---------------------------------------------------------------------------
+# Deployment / hosting
+# ---------------------------------------------------------------------------
+.vercel/
+.netlify/
+.firebase/
+.amplify/
+.serverless/
+.wrangler/
+
+# ---------------------------------------------------------------------------
+# Supabase CLI local state
+# ---------------------------------------------------------------------------
+supabase/.branches/
+supabase/.temp/
+supabase/.env
+supabase/.env.*
+
+# ---------------------------------------------------------------------------
+# Testing & coverage
+# ---------------------------------------------------------------------------
+/coverage/
+.nyc_output/
+/test-results/
+/playwright-report/
+/blob-report/
+playwright/.cache/
+cypress/videos/
+cypress/screenshots/
+*.lcov
+junit*.xml
+
+# ---------------------------------------------------------------------------
+# Logs, dumps & runtime files
+# ---------------------------------------------------------------------------
+/logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+*.pid
+*.pid.lock
+*.seed
+*.heapsnapshot
+*.cpuprofile
+
+# ---------------------------------------------------------------------------
+# Local databases & data dumps (may contain real customer data)
+# ---------------------------------------------------------------------------
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+*.dump
+*.bak
+*.backup
+
+# ---------------------------------------------------------------------------
+# Editors & IDEs
+# ---------------------------------------------------------------------------
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.iml
+.fleet/
+.vs/
+*.sublime-project
+*.sublime-workspace
+*.code-workspace
+*.swp
+*.swo
+*~
+.project
+.settings/
+.classpath
+
+# ---------------------------------------------------------------------------
+# Operating systems
+# ---------------------------------------------------------------------------
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+desktop.ini
+$RECYCLE.BIN/
+*.lnk
+.directory
+.Trash-*
+.nfs*
+
+# ---------------------------------------------------------------------------
+# Scratch & temporary files
+# ---------------------------------------------------------------------------
+/tmp/
+/temp/
+/.tmp/
+*.tmp
+*.temp
+*.orig
+*.rej

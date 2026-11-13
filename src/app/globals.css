@@ -1,0 +1,747 @@
+@import "tailwindcss";
+
+/* =========================================================================
+   EV SIMULATION — theme
+   -------------------------------------------------------------------------
+   One dashboard, three module families (CRM / DMS / ERP). The visual target
+   is the reference dashboard mock: a soft off-white page, generously rounded
+   white cards with a hairline border and a very light shadow, a single green
+   accent, and grey doing almost all of the typographic work. The sidebar is
+   white with a filled pale-green pill on the active item and grouped,
+   uppercase section headings.
+
+   Colours are defined once on :root and never re-declared inside a media
+   query only — dark mode overrides the same token names below.
+   ========================================================================= */
+
+:root {
+	color-scheme: light;
+
+	--bg: #f2f5f0;
+	--card: #ffffff;
+	--fg: #16211a;
+	--fg-muted: #67756d;
+	--fg-faint: #93a09a;
+	--border: #e6ebe4;
+	--border-strong: #d6ded2;
+
+	/* Green accent. --brand is the fill (charts, pills, buttons); --brand-ink
+	   is the text-safe darker step used for labels on white (7.0:1). */
+	--brand: #7cc243;
+	--brand-ink: #3d7a22;
+	--brand-soft: #eaf5e0;
+	--brand-softer: #f4faee;
+
+	--positive: #2e7d32;
+	--negative: #c0392b;
+	--warning: #b3701a;
+	--info: #2f6690;
+
+	/* Categorical series — fixed hue order, never reassigned per chart. */
+	--viz-1: #7cc243;
+	--viz-2: #2f6690;
+	--viz-3: #e8a33d;
+	--viz-4: #8a6fd1;
+	--viz-5: #d9685f;
+	--viz-6: #2fa38a;
+
+	--radius-card: 16px;
+	--radius-inner: 10px;
+	--shadow-card: 0 1px 2px rgba(22, 33, 26, 0.04), 0 8px 24px -16px rgba(22, 33, 26, 0.18);
+	--shadow-pop: 0 12px 32px -12px rgba(22, 33, 26, 0.25);
+
+	--sidebar: #ffffff;
+	--sidebar-border: #e9ede6;
+
+	/* Layered surfaces and per-tone washes. Components reach for these by
+	   meaning (a warning surface, a subtle inset) rather than by hex, so a
+	   retheme is an edit to this block and the dark blocks below, nothing else. */
+	--surface-subtle: #f7f9f5;
+	--hover: #f1f5ee;
+	--overlay: rgb(12 18 10 / 0.45);
+	--positive-surface: #edf7ee;
+	--positive-border: #cfe8d1;
+	--warning-surface: #fdf5e8;
+	--warning-border: #f1dcb3;
+	--negative-surface: #fcefed;
+	--negative-border: #f2cfca;
+	--info-surface: #edf3f8;
+	--info-border: #cddceb;
+	--chart-track: #eef2eb;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root:not([data-theme="light"]) {
+		color-scheme: dark;
+		--bg: #12150f;
+		--card: #1a1e17;
+		--fg: #eef2ea;
+		--fg-muted: #9aa695;
+		--fg-faint: #76806f;
+		--border: #262b21;
+		--border-strong: #333a2c;
+		--brand: #8fd455;
+		--brand-ink: #a8e072;
+		--brand-soft: #22301a;
+		--brand-softer: #1b2415;
+		--positive: #6dc073;
+		--negative: #e5766b;
+		--warning: #d9a84f;
+		--sidebar: #161a13;
+		--sidebar-border: #242a1f;
+		--shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -16px rgba(0, 0, 0, 0.6);
+		--surface-subtle: #1f241b;
+		--hover: #232a1e;
+		--overlay: rgb(0 0 0 / 0.6);
+		--positive-surface: #16261a;
+		--positive-border: #25402b;
+		--warning-surface: #2a2111;
+		--warning-border: #4a3a1a;
+		--negative-surface: #2c1715;
+		--negative-border: #4d2622;
+		--info-surface: #13202c;
+		--info-border: #22384d;
+		--chart-track: #262b21;
+	}
+}
+
+:root[data-theme="dark"] {
+	color-scheme: dark;
+	--bg: #12150f;
+	--card: #1a1e17;
+	--fg: #eef2ea;
+	--fg-muted: #9aa695;
+	--fg-faint: #76806f;
+	--border: #262b21;
+	--border-strong: #333a2c;
+	--brand: #8fd455;
+	--brand-ink: #a8e072;
+	--brand-soft: #22301a;
+	--brand-softer: #1b2415;
+	--positive: #6dc073;
+	--negative: #e5766b;
+	--warning: #d9a84f;
+	--sidebar: #161a13;
+	--sidebar-border: #242a1f;
+	--shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -16px rgba(0, 0, 0, 0.6);
+	--surface-subtle: #1f241b;
+	--hover: #232a1e;
+	--overlay: rgb(0 0 0 / 0.6);
+	--positive-surface: #16261a;
+	--positive-border: #25402b;
+	--warning-surface: #2a2111;
+	--warning-border: #4a3a1a;
+	--negative-surface: #2c1715;
+	--negative-border: #4d2622;
+	--info-surface: #13202c;
+	--info-border: #22384d;
+	--chart-track: #262b21;
+}
+
+@theme inline {
+	--color-bg: var(--bg);
+	--color-card: var(--card);
+	--color-fg: var(--fg);
+	--color-fg-muted: var(--fg-muted);
+	--color-fg-faint: var(--fg-faint);
+	--color-line: var(--border);
+	--color-line-strong: var(--border-strong);
+	--color-brand: var(--brand);
+	--color-brand-ink: var(--brand-ink);
+	--color-brand-soft: var(--brand-soft);
+	--color-brand-softer: var(--brand-softer);
+	--color-positive: var(--positive);
+	--color-negative: var(--negative);
+	--color-warning: var(--warning);
+	--color-info: var(--info);
+	--color-sidebar: var(--sidebar);
+	--color-sidebar-line: var(--sidebar-border);
+	--color-surface-subtle: var(--surface-subtle);
+	--color-hover: var(--hover);
+	--color-overlay: var(--overlay);
+	--color-positive-surface: var(--positive-surface);
+	--color-positive-border: var(--positive-border);
+	--color-warning-surface: var(--warning-surface);
+	--color-warning-border: var(--warning-border);
+	--color-negative-surface: var(--negative-surface);
+	--color-negative-border: var(--negative-border);
+	--color-info-surface: var(--info-surface);
+	--color-info-border: var(--info-border);
+	--color-chart-track: var(--chart-track);
+}
+
+@layer base {
+	* {
+		border-color: var(--border);
+	}
+
+	html,
+	body {
+		height: 100%;
+	}
+
+	body {
+		background: var(--bg);
+		color: var(--fg);
+		font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+		-webkit-font-smoothing: antialiased;
+	}
+
+	button:not(:disabled),
+	[role="button"]:not(:disabled) {
+		cursor: pointer;
+	}
+}
+
+/* ---------------------------------------------------------------------------
+   Surfaces
+--------------------------------------------------------------------------- */
+
+.surface {
+	background: var(--card);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-card);
+	box-shadow: var(--shadow-card);
+}
+
+@layer components {
+	/* ---------------------------------------------------------------------------
+	   Sidebar — a light rail that expands to 276px and collapses to a 64px icon
+	   strip. Sections are separated by a hairline and a small uppercase title;
+	   a group's children hang off a thin guide line rather than a deeper indent,
+	   so the nesting reads at a glance without eating width.
+	--------------------------------------------------------------------------- */
+
+	.rail {
+		background: var(--sidebar);
+		border-right: 1px solid var(--sidebar-border);
+		transition: width 200ms ease;
+	}
+
+	.rail-heading {
+		color: var(--fg-faint);
+		font-size: 10.5px;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+	}
+
+	.rail-section + .rail-section {
+		margin-top: 10px;
+		padding-top: 10px;
+		border-top: 1px solid color-mix(in srgb, var(--sidebar-border) 80%, transparent);
+	}
+
+	.rail-item {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		width: 100%;
+		min-height: 36px;
+		padding: 7px 10px;
+		border-radius: var(--radius-inner);
+		font-size: 13px;
+		font-weight: 500;
+		color: var(--fg-muted);
+		outline: none;
+		transition: background-color 120ms ease, color 120ms ease;
+	}
+
+	.rail-item:hover {
+		background: var(--hover);
+		color: var(--fg);
+	}
+
+	.rail-item:focus-visible {
+		box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 45%, transparent);
+	}
+
+	.rail-item[data-active="true"] {
+		background: var(--brand-soft);
+		color: var(--brand-ink);
+		font-weight: 600;
+	}
+
+	/* A collapsed group whose child is the current page keeps a quieter mark. */
+	.rail-item[data-contains-active="true"] {
+		color: var(--brand-ink);
+		font-weight: 600;
+	}
+
+	.rail[data-collapsed="true"] .rail-item {
+		justify-content: center;
+		padding-inline: 0;
+	}
+
+	/* Children animate open by transitioning grid rows 0fr → 1fr, which needs
+	   no measured height and no JavaScript beyond the open flag. */
+	.rail-children {
+		display: grid;
+		grid-template-rows: 0fr;
+		opacity: 0;
+		transition: grid-template-rows 200ms ease, opacity 160ms ease;
+	}
+	.rail-children[data-open="true"] {
+		grid-template-rows: 1fr;
+		opacity: 1;
+	}
+	.rail-children > div {
+		min-height: 0;
+		overflow: hidden;
+	}
+	.rail-children-inner {
+		margin-left: 18px;
+		padding: 3px 0 4px 10px;
+		border-left: 1px solid var(--sidebar-border);
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+	.rail-sub {
+		min-height: 32px;
+		font-size: 12.5px;
+	}
+
+	/* Hidden scrollbar — the rail and the command palette still scroll, just
+	   without a track. */
+	.no-scrollbar {
+		scrollbar-width: none;
+		-ms-overflow-style: none;
+		overscroll-behavior: contain;
+	}
+	.no-scrollbar::-webkit-scrollbar {
+		display: none;
+	}
+
+	/* Tooltip for the collapsed rail. Positioned fixed by the sidebar itself, so
+	   the nav's own overflow cannot clip it. */
+	.rail-tip {
+		position: fixed;
+		z-index: 80;
+		transform: translateY(-50%);
+		pointer-events: none;
+		padding: 5px 9px;
+		border-radius: 7px;
+		background: var(--fg);
+		color: var(--bg);
+		font-size: 12px;
+		font-weight: 600;
+		white-space: nowrap;
+		box-shadow: var(--shadow-pop);
+		animation: fade-in 120ms ease;
+	}
+}
+
+/* ---------------------------------------------------------------------------
+   Status pills + the "under development" dot
+--------------------------------------------------------------------------- */
+
+.pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	border-radius: 999px;
+	padding: 2px 9px;
+	font-size: 11px;
+	font-weight: 600;
+	line-height: 18px;
+	white-space: nowrap;
+}
+
+.pill-positive {
+	background: color-mix(in srgb, var(--positive) 12%, transparent);
+	color: var(--positive);
+}
+.pill-warning {
+	background: color-mix(in srgb, var(--warning) 14%, transparent);
+	color: var(--warning);
+}
+.pill-negative {
+	background: color-mix(in srgb, var(--negative) 12%, transparent);
+	color: var(--negative);
+}
+.pill-info {
+	background: color-mix(in srgb, var(--info) 12%, transparent);
+	color: var(--info);
+}
+.pill-neutral {
+	background: color-mix(in srgb, var(--fg-muted) 10%, transparent);
+	color: var(--fg-muted);
+}
+.pill-brand {
+	background: var(--brand-soft);
+	color: var(--brand-ink);
+}
+
+/* The dot marking a module that is not finished. */
+.dev-dot {
+	display: inline-block;
+	height: 7px;
+	width: 7px;
+	flex: none;
+	border-radius: 999px;
+	background: var(--negative);
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--negative) 16%, transparent);
+}
+
+/* ---------------------------------------------------------------------------
+   Tables
+--------------------------------------------------------------------------- */
+
+.data-table {
+	width: 100%;
+	border-collapse: separate;
+	border-spacing: 0;
+	font-size: 13px;
+}
+
+.data-table thead th {
+	position: sticky;
+	top: 0;
+	z-index: 1;
+	background: var(--card);
+	text-align: left;
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: var(--fg-faint);
+	padding: 10px 14px;
+	border-bottom: 1px solid var(--border);
+	white-space: nowrap;
+}
+
+.data-table tbody td {
+	padding: 11px 14px;
+	border-bottom: 1px solid var(--border);
+	color: var(--fg);
+	vertical-align: middle;
+}
+
+.data-table tbody tr:last-child td {
+	border-bottom: none;
+}
+
+.data-table tbody tr:hover td {
+	background: var(--brand-softer);
+}
+
+.num {
+	font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------------------------
+   Forms & buttons — every mutation in the app (new lead, assign, advance a
+   stage, add a remark …) goes through a plain HTML <form action={serverFn}>,
+   so these are the only form primitives the whole simulation needs.
+--------------------------------------------------------------------------- */
+
+.field {
+	width: 100%;
+	border-radius: var(--radius-inner);
+	border: 1px solid var(--border);
+	background: var(--bg);
+	padding: 7px 10px;
+	font-size: 13px;
+	color: var(--fg);
+}
+.field:focus {
+	outline: 2px solid var(--brand);
+	outline-offset: -1px;
+}
+.field-label {
+	display: block;
+	margin-bottom: 4px;
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--fg-muted);
+}
+
+.btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	border-radius: var(--radius-inner);
+	padding: 7px 13px;
+	font-size: 12.5px;
+	font-weight: 600;
+	white-space: nowrap;
+	border: 1px solid transparent;
+	transition: opacity 120ms ease, background-color 120ms ease;
+}
+.btn:disabled {
+	opacity: 0.55;
+	cursor: default;
+}
+.btn-primary {
+	background: var(--brand);
+	color: #0e2107;
+}
+.btn-primary:hover:not(:disabled) {
+	opacity: 0.9;
+}
+.btn-ghost {
+	background: var(--bg);
+	color: var(--fg);
+	border-color: var(--border);
+}
+.btn-ghost:hover:not(:disabled) {
+	background: var(--brand-softer);
+}
+.btn-danger {
+	background: color-mix(in srgb, var(--negative) 10%, transparent);
+	color: var(--negative);
+	border-color: color-mix(in srgb, var(--negative) 25%, transparent);
+}
+.btn-danger:hover:not(:disabled) {
+	background: color-mix(in srgb, var(--negative) 16%, transparent);
+}
+.btn-sm {
+	padding: 4px 9px;
+	font-size: 11.5px;
+	border-radius: 7px;
+}
+
+/* A <details> element styled as an inline expanding panel — the app's stand-in
+   for a modal that needs no client JS: "Add lead", "Create segment" and every
+   similar form open this way. */
+.disclosure > summary {
+	list-style: none;
+	cursor: pointer;
+}
+.disclosure > summary::-webkit-details-marker {
+	display: none;
+}
+.disclosure[open] > summary .disclosure-chevron {
+	transform: rotate(180deg);
+}
+.disclosure-panel {
+	border-top: 1px solid var(--border);
+	background: var(--brand-softer);
+}
+
+/* Component classes live in the components layer so Tailwind utilities on
+   the same element (lg:hidden, p-0 …) still win — unlayered CSS would beat
+   every utility. */
+@layer components {
+	/* ---------------------------------------------------------------------------
+	   Layout scaling — card grids size columns by what a card needs, not by a
+	   viewport breakpoint, so a larger browser font reflows the grid instead of
+	   clipping labels.
+	--------------------------------------------------------------------------- */
+
+	.grid-auto-fit,
+	.grid-auto-fit-sm {
+		display: grid;
+	}
+	.grid-auto-fit-sm {
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+	}
+	.grid-auto-fit {
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+	}
+	/* ---------------------------------------------------------------------------
+	   Header chrome — square icon buttons, popovers and their menu rows.
+	--------------------------------------------------------------------------- */
+
+	.icon-btn {
+		position: relative;
+		display: inline-flex;
+		height: 36px;
+		width: 36px;
+		flex: none;
+		align-items: center;
+		justify-content: center;
+		border-radius: var(--radius-inner);
+		border: 1px solid var(--border);
+		background: var(--card);
+		color: var(--fg-muted);
+		outline: none;
+		transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+	}
+	.icon-btn:hover {
+		border-color: var(--border-strong);
+		background: var(--surface-subtle);
+		color: var(--fg);
+	}
+	.icon-btn:focus-visible {
+		box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 45%, transparent);
+	}
+	.icon-btn[aria-expanded="true"] {
+		border-color: var(--border-strong);
+		background: var(--surface-subtle);
+		color: var(--fg);
+	}
+
+	.popover {
+		background: var(--card);
+		border: 1px solid var(--border);
+		border-radius: 12px;
+		box-shadow: var(--shadow-pop);
+		animation: pop-in 140ms ease-out;
+		transform-origin: top right;
+	}
+
+	.menu-item {
+		display: flex;
+		width: 100%;
+		align-items: center;
+		gap: 9px;
+		border-radius: 8px;
+		padding: 7px 9px;
+		font-size: 13px;
+		color: var(--fg);
+		text-align: left;
+		outline: none;
+		transition: background-color 120ms ease;
+	}
+	.menu-item:hover,
+	.menu-item:focus-visible {
+		background: var(--hover);
+	}
+
+	.menu-label {
+		font-size: 10.5px;
+		font-weight: 700;
+		letter-spacing: 0.07em;
+		text-transform: uppercase;
+		color: var(--fg-faint);
+	}
+
+	kbd,
+	.kbd {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 18px;
+		border-radius: 5px;
+		border: 1px solid var(--border);
+		background: var(--card);
+		padding: 1px 5px;
+		font-family: inherit;
+		font-size: 10.5px;
+		font-weight: 600;
+		line-height: 16px;
+		color: var(--fg-muted);
+	}
+
+	/* ---------------------------------------------------------------------------
+	   Modal dialogs — native <dialog>, so focus containment, Escape and the top
+	   layer come from the browser rather than a library.
+	--------------------------------------------------------------------------- */
+
+	dialog.modal {
+		margin: 14vh auto auto;
+		width: min(48rem, calc(100vw - 2rem));
+		max-height: min(25rem, 72vh);
+		padding: 0;
+		border: 1px solid var(--border);
+		border-radius: 14px;
+		background: var(--card);
+		color: var(--fg);
+		box-shadow: var(--shadow-pop);
+		overflow: hidden;
+	}
+	dialog.modal[open] {
+		display: flex;
+		flex-direction: column;
+		animation: pop-in 150ms ease-out;
+	}
+	dialog.modal::backdrop {
+		background: var(--overlay);
+		backdrop-filter: blur(1px);
+	}
+
+	/* ---------------------------------------------------------------------------
+	   Loading skeletons
+	--------------------------------------------------------------------------- */
+
+	.skeleton {
+		border-radius: 10px;
+		background: linear-gradient(90deg, var(--border) 0%, var(--surface-subtle) 50%, var(--border) 100%);
+		background-size: 200% 100%;
+		animation: shimmer 1.3s ease-in-out infinite;
+	}
+}
+
+/* Linked cards. Unlayered on purpose: the :hover rules must outrank .surface
+   (also unlayered), which a layered rule never could. */
+.card-link {
+	transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+	outline: none;
+}
+.card-link:hover {
+	border-color: var(--border-strong);
+	box-shadow: var(--shadow-pop);
+}
+.card-link:focus-visible {
+	box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 45%, transparent);
+}
+
+/* ---------------------------------------------------------------------------
+   Motion
+--------------------------------------------------------------------------- */
+
+@keyframes pop-in {
+	from {
+		opacity: 0;
+		transform: scale(0.97) translateY(-2px);
+	}
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+@keyframes fade-in {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+@keyframes rise-in {
+	from {
+		opacity: 0;
+		transform: translateY(6px);
+	}
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+@keyframes shimmer {
+	from {
+		background-position: 200% 0;
+	}
+	to {
+		background-position: -200% 0;
+	}
+}
+@keyframes typing {
+	0%,
+	60%,
+	100% {
+		transform: translateY(0);
+		opacity: 0.5;
+	}
+	30% {
+		transform: translateY(-3px);
+		opacity: 1;
+	}
+}
+
+.rise-in {
+	animation: rise-in 200ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+	}
+}

@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>EV Dealer Operations Platform</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout: flowcharts are the document. Each section is one chart in a framed
+     plate, with a short note above it and a legend or caption beneath. */
+  :root {
+    --paper: #f7f5f0;
+    --surface: #ffffff;
+    --sunken: #f1efe8;
+    --ink: #1a1c19;
+    --ink-soft: #55594f;
+    --ink-faint: #8a8d82;
+    --rule: #ded9ce;
+    --crm: #1a6378;
+    --dms: #156a4a;
+    --erp: #8d6316;
+    --dec: #9a6a12;
+    --ext: #5c6168;
+    --flag: #a8352c;
+    --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+    --font-body: "Newsreader", Georgia, "Times New Roman", serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #14161a;
+      --surface: #1b1e23;
+      --sunken: #22262c;
+      --ink: #eceee9;
+      --ink-soft: #a8ada2;
+      --ink-faint: #767b71;
+      --rule: #2e3339;
+      --crm: #65c3dd;
+      --dms: #5fcc9c;
+      --erp: #e2b25c;
+      --dec: #e8bb6a;
+      --ext: #a4abb4;
+      --flag: #f08b80;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #14161a;
+    --surface: #1b1e23;
+    --sunken: #22262c;
+    --ink: #eceee9;
+    --ink-soft: #a8ada2;
+    --ink-faint: #767b71;
+    --rule: #2e3339;
+    --crm: #65c3dd;
+    --dms: #5fcc9c;
+    --erp: #e2b25c;
+    --dec: #e8bb6a;
+    --ext: #a4abb4;
+    --flag: #f08b80;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 17px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding-inline: 20px; padding-block: 0 64px; }
+
+  .topbar {
+    position: sticky;
+    top: env(safe-area-inset-top, 0px);
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--rule);
+    background: color-mix(in srgb, var(--paper) 92%, transparent);
+    backdrop-filter: blur(10px);
+  }
+  .mark { font-family: var(--font-display); font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--dms); }
+  .topbar nav { display: flex; gap: 2px; margin-left: auto; flex-wrap: wrap; }
+  .topbar nav a { font-family: var(--font-display); font-size: 12.5px; font-weight: 500; color: var(--ink-soft); text-decoration: none; padding: 6px 9px; border-radius: 6px; }
+  .topbar nav a:hover { color: var(--ink); background: color-mix(in srgb, var(--ink) 7%, transparent); }
+  #theme {
+    font-family: var(--font-display); font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--ink-soft); background: transparent; border: 1px solid var(--rule); border-radius: 999px; padding: 6px 13px; cursor: pointer;
+  }
+  #theme:hover { color: var(--ink); border-color: var(--ink-faint); }
+  :focus-visible { outline: 2px solid var(--dms); outline-offset: 2px; }
+
+  header.hero { padding-block: 52px 36px; border-bottom: 1px solid var(--rule); }
+  .eyebrow { font-family: var(--font-display); font-size: 12px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--dms); margin: 0 0 16px; }
+  h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(30px, 5vw, 48px); line-height: 1.06; letter-spacing: -.025em; text-wrap: balance; margin: 0 0 18px; }
+  .lede { max-width: 64ch; font-size: clamp(17px, 2vw, 19.5px); color: var(--ink-soft); margin: 0; }
+
+  section { padding-block: 48px; border-bottom: 1px solid var(--rule); }
+  section:last-of-type { border-bottom: 0; }
+  .shead { display: flex; align-items: baseline; gap: 14px; margin-bottom: 8px; }
+  .snum { font-family: var(--font-mono); font-size: 12px; color: var(--ink-faint); }
+  h2 { font-family: var(--font-display); font-weight: 700; font-size: clamp(22px, 3vw, 30px); letter-spacing: -.02em; line-height: 1.15; text-wrap: balance; margin: 0; }
+  .sub { max-width: 70ch; color: var(--ink-soft); margin: 0 0 26px; }
+
+  /* ---------- flowchart plate ---------- */
+  .plate { background: var(--surface); border: 1px solid var(--rule); border-radius: 4px; padding: 20px; }
+  .scroller { overflow-x: auto; }
+  .fc { display: block; width: 100%; height: auto; }
+  .fc.w-xl { min-width: 1060px; }
+  .fc.w-lg { min-width: 940px; }
+
+  .fc text { font-family: var(--font-body); }
+  .fc .t { font-family: var(--font-display); font-size: 12.5px; font-weight: 600; fill: var(--ink); }
+  .fc .s { font-size: 10.5px; fill: var(--ink-soft); }
+  .fc .bl { font-family: var(--font-display); font-size: 10px; font-weight: 700; letter-spacing: .14em; }
+  .fc .el { font-family: var(--font-display); font-size: 9.5px; font-weight: 500; letter-spacing: .03em; fill: var(--ink-soft); }
+
+  .fc .box { stroke-width: 1.5; }
+  .fc .crm { fill: color-mix(in srgb, var(--crm) 11%, transparent); stroke: var(--crm); }
+  .fc .dms { fill: color-mix(in srgb, var(--dms) 11%, transparent); stroke: var(--dms); }
+  .fc .erp { fill: color-mix(in srgb, var(--erp) 11%, transparent); stroke: var(--erp); }
+  .fc .ext { fill: color-mix(in srgb, var(--ext) 11%, transparent); stroke: var(--ext); }
+  .fc .dec { fill: color-mix(in srgb, var(--dec) 13%, transparent); stroke: var(--dec); }
+  .fc .stop { fill: color-mix(in srgb, var(--flag) 11%, transparent); stroke: var(--flag); }
+
+  .fc .band { fill: none; stroke: var(--rule); stroke-width: 1; stroke-dasharray: 7 5; }
+  .fc .bl-crm { fill: var(--crm); }
+  .fc .bl-dms { fill: var(--dms); }
+  .fc .bl-erp { fill: var(--erp); }
+
+  .fc .e { fill: none; stroke: var(--ink-faint); stroke-width: 1.6; stroke-linejoin: round; }
+  .fc .e-d { stroke-dasharray: 5 4; }
+  .fc .head { fill: var(--ink-faint); }
+  .fc .plaque { fill: var(--surface); stroke: none; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 18px; padding-top: 15px; border-top: 1px solid var(--rule); }
+  .legend span { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-display); font-size: 12px; font-weight: 500; letter-spacing: .03em; color: var(--ink-soft); }
+  .sw { width: 14px; height: 10px; border-radius: 2px; border: 1.5px solid; }
+  .sw.d { border-radius: 0; transform: rotate(45deg) scale(.82); }
+  .cap { margin: 16px 0 0; font-size: 15px; color: var(--ink-soft); max-width: 78ch; }
+  .cap + .cap { margin-top: 8px; }
+  .cap b { color: var(--ink); font-weight: 500; }
+
+  /* ---------- connector grid ---------- */
+  .conns { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 14px; }
+  .conn { background: var(--surface); border: 1px solid var(--rule); border-radius: 4px; padding: 16px 18px; }
+  .conn h3 { font-family: var(--font-display); font-size: 15px; font-weight: 600; margin: 0; }
+  .conn .prov { font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-faint); display: block; margin-top: 2px; }
+  .conn p { margin: 10px 0 0; font-size: 14.5px; color: var(--ink-soft); line-height: 1.5; }
+  .conn .new { display: inline-block; font-family: var(--font-display); font-size: 10px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--dms); border: 1px solid currentColor; border-radius: 999px; padding: 1px 7px; margin-left: 8px; vertical-align: 2px; }
+
+  /* ---------- module index ---------- */
+  .domain { margin-bottom: 30px; }
+  .domain > header { display: flex; align-items: baseline; gap: 12px; padding-bottom: 9px; border-bottom: 2px solid currentColor; }
+  .domain h3 { font-family: var(--font-display); font-size: 14px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; margin: 0; color: var(--ink); }
+  .domain .n { font-family: var(--font-mono); font-size: 12px; color: var(--ink-faint); margin-left: auto; }
+  .d-crm { color: var(--crm); } .d-dms { color: var(--dms); } .d-erp { color: var(--erp); }
+  .mods { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 0 28px; }
+  .mods .grp { grid-column: 1 / -1; font-family: var(--font-display); font-size: 11.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-faint); padding: 15px 0 3px; }
+  .mod { padding: 10px 0; border-bottom: 1px solid var(--rule); min-width: 0; }
+  .mod b { font-family: var(--font-display); font-weight: 600; font-size: 14.5px; }
+  .mod span { display: block; color: var(--ink-soft); font-size: 14px; line-height: 1.45; margin-top: 2px; }
+  .wip { display: inline-block; font-family: var(--font-display); font-size: 10px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--flag); border: 1px solid currentColor; border-radius: 999px; padding: 1px 7px; margin-left: 8px; vertical-align: 1px; white-space: nowrap; }
+
+  /* ---------- rules ---------- */
+  .rules { width: 100%; border-collapse: collapse; font-size: 15px; }
+  .rules th, .rules td { text-align: left; padding: 13px 20px 13px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  .rules th { font-family: var(--font-display); font-size: 11.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-faint); padding-top: 0; }
+  .rules td:first-child { font-family: var(--font-display); font-weight: 600; font-size: 14.5px; width: 46%; }
+  .rules td:last-child { color: var(--ink-soft); padding-right: 0; }
+
+  footer { padding-block: 32px; border-top: 1px solid var(--rule); font-family: var(--font-display); font-size: 12px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-faint); display: flex; gap: 10px 26px; flex-wrap: wrap; }
+
+  @media (max-width: 560px) {
+    body { font-size: 16px; }
+    .topbar nav { display: none; }
+    .plate { padding: 12px; }
+    .rules td:first-child { width: auto; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+<style>
+  :root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="mark">Luxus Green · Platform</span>
+  <nav>
+    <a href="#map">Module map</a>
+    <a href="#retail">Retail</a>
+    <a href="#supply">Supply</a>
+    <a href="#service">Service</a>
+    <a href="#outside">Outside systems</a>
+    <a href="#modules">Modules</a>
+  </nav>
+  <button id="theme" type="button" aria-pressed="false">Dark</button>
+</div>
+
+<div class="wrap">
+
+  <header class="hero">
+    <p class="eyebrow">Project documentation</p>
+    <h1>How the modules connect, and what moves between&nbsp;them</h1>
+    <p class="lede">Every chart below is a flow the platform actually runs. Each box is a module you can open; each arrow is a record one module hands to the next. Diamonds are the points where the system decides, refuses, or waits for someone.</p>
+  </header>
+
+  <section id="map">
+    <div class="shead"><span class="snum">01</span><h2>Module map</h2></div>
+    <p class="sub">The modules that pass work to each other, grouped by the domain they belong to. Solid arrows are handovers. Dashed arrows are what a step raises on its own — an approval, an invoice, a voucher.</p>
+
+    <div class="plate">
+      <div class="scroller">
+        <svg class="fc w-xl" viewBox="0 0 1240 620" role="img" aria-labelledby="mapT mapD">
+          <title id="mapT">Module map</title>
+          <desc id="mapD">Customer relationship, dealer management and ERP modules, with the records that pass between them.</desc>
+          <defs>
+            <marker id="ah" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+              <polygon class="head" points="0 0, 9 3.5, 0 7"></polygon>
+            </marker>
+          </defs>
+
+          <rect class="band" x="16" y="52" width="1208" height="128" rx="8"></rect>
+          <text class="bl bl-crm" x="30" y="72">CUSTOMER RELATIONSHIP MANAGEMENT</text>
+          <rect class="band" x="16" y="204" width="1208" height="212" rx="8"></rect>
+          <text class="bl bl-dms" x="30" y="224">DEALER MANAGEMENT</text>
+          <rect class="band" x="16" y="440" width="1208" height="128" rx="8"></rect>
+          <text class="bl bl-erp" x="30" y="460">ERP &amp; CORE INTEGRATIONS</text>
+
+          <!-- CRM band -->
+          <rect class="box crm" x="40" y="92" width="170" height="56" rx="5"></rect>
+          <text class="t" x="125" y="117" text-anchor="middle">Enquiries</text>
+          <text class="s" x="125" y="133" text-anchor="middle">web, calls, walk-ins</text>
+
+          <rect class="box crm" x="240" y="92" width="170" height="56" rx="5"></rect>
+          <text class="t" x="325" y="117" text-anchor="middle">Lead Master</text>
+          <text class="s" x="325" y="133" text-anchor="middle">scored, routed to a dealer</text>
+
+          <rect class="box crm" x="440" y="92" width="170" height="56" rx="5"></rect>
+          <text class="t" x="525" y="117" text-anchor="middle">Test Drives</text>
+          <text class="s" x="525" y="133" text-anchor="middle">slot, licence, feedback</text>
+
+          <rect class="box crm" x="640" y="92" width="170" height="56" rx="5"></rect>
+          <text class="t" x="725" y="117" text-anchor="middle">Pipeline</text>
+          <text class="s" x="725" y="133" text-anchor="middle">deals by stage</text>
+
+          <rect class="box crm" x="840" y="92" width="170" height="56" rx="5"></rect>
+          <text class="t" x="925" y="117" text-anchor="middle">Bookings</text>
+          <text class="s" x="925" y="133" text-anchor="middle">token paid, awaiting finance</text>
+
+          <rect class="box crm" x="1040" y="92" width="170" height="56" rx="5"></rect>
+          <text class="t" x="1125" y="117" text-anchor="middle">Support &amp; Tickets</text>
+          <text class="s" x="1125" y="133" text-anchor="middle">any channel, SLA-tracked</text>
+
+          <!-- DMS row 1 -->
+          <rect class="box dms" x="40" y="244" width="170" height="56" rx="5"></rect>
+          <text class="t" x="125" y="269" text-anchor="middle">Service Job Cards</text>
+          <text class="s" x="125" y="285" text-anchor="middle">opened by chassis number</text>
+
+          <rect class="box dms" x="240" y="244" width="170" height="56" rx="5"></rect>
+          <text class="t" x="325" y="269" text-anchor="middle">Warranty Claims</text>
+          <text class="s" x="325" y="285" text-anchor="middle">adjudicated on arrival</text>
+
+          <rect class="box dms" x="640" y="244" width="170" height="56" rx="5"></rect>
+          <text class="t" x="725" y="269" text-anchor="middle">Quotation &amp; GST</text>
+          <text class="s" x="725" y="285" text-anchor="middle">priced, taxed by state</text>
+
+          <rect class="box dms" x="840" y="244" width="170" height="56" rx="5"></rect>
+          <text class="t" x="925" y="269" text-anchor="middle">Finance &amp; Insurance</text>
+          <text class="s" x="925" y="285" text-anchor="middle">loan, policy per chassis</text>
+
+          <rect class="box dms" x="1040" y="244" width="170" height="56" rx="5"></rect>
+          <text class="t" x="1125" y="269" text-anchor="middle">Vehicle Delivery</text>
+          <text class="s" x="1125" y="285" text-anchor="middle">allocate, PDI, OTP handover</text>
+
+          <!-- DMS row 2 -->
+          <rect class="box dms" x="40" y="330" width="170" height="56" rx="5"></rect>
+          <text class="t" x="125" y="355" text-anchor="middle">Dealer Orders</text>
+          <text class="s" x="125" y="371" text-anchor="middle">placed on the OEM</text>
+
+          <rect class="box dms" x="240" y="330" width="170" height="56" rx="5"></rect>
+          <text class="t" x="325" y="355" text-anchor="middle">Vehicle Stock</text>
+          <text class="s" x="325" y="371" text-anchor="middle">unit level, with its ledger</text>
+
+          <rect class="box dms" x="840" y="330" width="170" height="56" rx="5"></rect>
+          <text class="t" x="925" y="355" text-anchor="middle">RTO &amp; Registration</text>
+          <text class="s" x="925" y="371" text-anchor="middle">TP, Vahan, number plate</text>
+
+          <!-- ERP band -->
+          <rect class="box erp" x="40" y="480" width="170" height="56" rx="5"></rect>
+          <text class="t" x="125" y="505" text-anchor="middle">Notifications</text>
+          <text class="s" x="125" y="521" text-anchor="middle">derived, never stored</text>
+
+          <rect class="box erp" x="240" y="480" width="170" height="56" rx="5"></rect>
+          <text class="t" x="325" y="505" text-anchor="middle">Billing &amp; Invoices</text>
+          <text class="s" x="325" y="521" text-anchor="middle">receivables, credit limits</text>
+
+          <rect class="box erp" x="440" y="480" width="170" height="56" rx="5"></rect>
+          <text class="t" x="525" y="505" text-anchor="middle">Documents</text>
+          <text class="s" x="525" y="521" text-anchor="middle">KYC, agreements, invoices</text>
+
+          <rect class="box erp" x="640" y="480" width="170" height="56" rx="5"></rect>
+          <text class="t" x="725" y="505" text-anchor="middle">Approvals</text>
+          <text class="s" x="725" y="521" text-anchor="middle">discount, credit, warranty</text>
+
+          <rect class="box erp" x="840" y="480" width="170" height="56" rx="5"></rect>
+          <text class="t" x="925" y="505" text-anchor="middle">Accounting</text>
+          <text class="s" x="925" y="521" text-anchor="middle">vouchers, mapping, replay</text>
+
+          <rect class="box erp" x="1040" y="480" width="170" height="56" rx="5"></rect>
+          <text class="t" x="1125" y="505" text-anchor="middle">MIS &amp; Analytics</text>
+          <text class="s" x="1125" y="521" text-anchor="middle">one set of figures</text>
+
+          <!-- CRM chain -->
+          <path class="e" d="M210 120 L236 120" marker-end="url(#ah)"></path>
+          <path class="e" d="M410 120 L436 120" marker-end="url(#ah)"></path>
+          <path class="e" d="M610 120 L636 120" marker-end="url(#ah)"></path>
+
+          <!-- Pipeline -> Quotation -->
+          <path class="e" d="M680 148 L680 240" marker-end="url(#ah)"></path>
+          <rect class="plaque" x="686" y="186" width="42" height="13"></rect>
+          <text class="el" x="690" y="196">quote</text>
+
+          <!-- Quotation -> Bookings -->
+          <path class="e" d="M790 244 L790 200 L880 200 L880 152" marker-end="url(#ah)"></path>
+          <rect class="plaque" x="796" y="182" width="78" height="13"></rect>
+          <text class="el" x="800" y="192">accepted → book</text>
+
+          <!-- Bookings -> Finance -->
+          <path class="e" d="M970 148 L970 240" marker-end="url(#ah)"></path>
+          <rect class="plaque" x="976" y="186" width="72" height="13"></rect>
+          <text class="el" x="980" y="196">loan + policy</text>
+
+          <!-- Finance -> Delivery -->
+          <path class="e" d="M1010 272 L1036 272" marker-end="url(#ah)"></path>
+
+          <!-- Delivery -> RTO -->
+          <path class="e" d="M1070 300 L1070 316 L925 316 L925 326" marker-end="url(#ah)"></path>
+          <rect class="plaque" x="952" y="309" width="62" height="13"></rect>
+          <text class="el" x="956" y="319">handed over</text>
+
+          <!-- Orders -> Stock -->
+          <path class="e" d="M210 358 L236 358" marker-end="url(#ah)"></path>
+
+          <!-- Stock -> Delivery -->
+          <path class="e" d="M325 386 L325 402 L1160 402 L1160 304" marker-end="url(#ah)"></path>
+          <rect class="plaque" x="600" y="395" width="96" height="13"></rect>
+          <text class="el" x="604" y="405">allocated, oldest first</text>
+
+          <!-- Job cards -> Warranty -->
+          <path class="e" d="M210 272 L236 272" marker-end="url(#ah)"></path>
+
+          <!-- Quotation -> Approvals -->
+          <path class="e e-d" d="M725 300 L725 476" marker-end="url(#ah)"></path>
+          <rect class="plaque" x="731" y="400" width="86" height="13"></rect>
+          <text class="el" x="735" y="410">discount over 3%</text>
+
+          <!-- Orders -> Billing -->
+          <path class="e e-d" d="M125 386 L125 430 L325 430 L325 476" marker-end="url(#ah)"></path>
+          <rect class="plaque" x="150" y="423" width="92" height="13"></rect>
+          <text class="el" x="154" y="433">dispatch → invoice</text>
+
+          <!-- Billing -> Accounting -->
+          <path class="e e-d" d="M325 536 L325 556 L925 556 L925 540" marker-end="url(#ah)"></path>
+          <rect class="plaque" x="560" y="549" width="118" height="13"></rect>
+          <text class="el" x="564" y="559">every rupee queues a voucher</text>
+        </svg>
+      </div>
+      <div class="legend">
+        <span><i class="sw" style="background:color-mix(in srgb,var(--crm) 22%,transparent);border-color:var(--crm)"></i>Customer relationship</span>
+        <span><i class="sw" style="background:color-mix(in srgb,var(--dms) 22%,transparent);border-color:var(--dms)"></i>Dealer management</span>
+        <span><i class="sw" style="background:color-mix(in srgb,var(--erp) 22%,transparent);border-color:var(--erp)"></i>ERP &amp; integrations</span>
+      </div>
+      <p class="cap"><b>Reading it:</b> solid arrows are a record handed on — a quotation becomes a booking, a booking releases a delivery. Dashed arrows are raised automatically by the step they leave, without anyone asking for them.</p>
+    </div>
+  </section>
+
+  <section id="retail">
+    <div class="shead"><span class="snum">02</span><h2>Retail: enquiry to registered vehicle</h2></div>
+    <p class="sub">The full customer journey as the platform runs it. Three decision points govern it: whether a discount needs approval, whether the loan is sanctioned before delivery can be released, and whether every vehicle is insured before dispatch.</p>
+
+    <div class="plate">
+      <div class="scroller">
+        <svg class="fc w-xl" viewBox="0 0 1240 400" role="img" aria-labelledby="retT retD">
+          <title id="retT">Retail flow</title>
+          <desc id="retD">From enquiry through quotation, approval, booking, finance, insurance, dispatch, handover and registration.</desc>
+
+          <!-- Row 1 -->
+          <rect class="box crm" x="30" y="46" width="150" height="60" rx="5"></rect>
+          <text class="t" x="105" y="72" text-anchor="middle">Enquiry</text>
+          <text class="s" x="105" y="88" text-anchor="middle">converted to a lead</text>
+
+          <rect class="box crm" x="202" y="46" width="150" height="60" rx="5"></rect>
+          <text class="t" x="277" y="72" text-anchor="middle">Routed</text>
+          <text class="s" x="277" y="88" text-anchor="middle">nearest dealer, lightest load</text>
+
+          <rect class="box crm" x="374" y="46" width="150" height="60" rx="5"></rect>
+          <text class="t" x="449" y="72" text-anchor="middle">Test drive</text>
+          <text class="s" x="449" y="88" text-anchor="middle">licence checked, feedback</text>
+
+          <rect class="box crm" x="546" y="46" width="150" height="60" rx="5"></rect>
+          <text class="t" x="621" y="72" text-anchor="middle">Deal</text>
+          <text class="s" x="621" y="88" text-anchor="middle">qualified in the pipeline</text>
+
+          <rect class="box dms" x="718" y="46" width="150" height="60" rx="5"></rect>
+          <text class="t" x="793" y="72" text-anchor="middle">Quotation</text>
+          <text class="s" x="793" y="88" text-anchor="middle">GST split, subsidy applied</text>
+
+          <polygon class="box dec" points="920,46 1010,46 1040,76 1010,106 920,106 890,76"></polygon>
+          <text class="t" x="965" y="72" text-anchor="middle">Discount</text>
+          <text class="s" x="965" y="88" text-anchor="middle">over 3%?</text>
+
+          <rect class="box erp" x="1062" y="46" width="150" height="60" rx="5"></rect>
+          <text class="t" x="1137" y="72" text-anchor="middle">Approval queue</text>
+          <text class="s" x="1137" y="88" text-anchor="middle">before the customer sees it</text>
+
+          <path class="e" d="M180 76 L198 76" marker-end="url(#ah)"></path>
+          <path class="e" d="M352 76 L370 76" marker-end="url(#ah)"></path>
+          <path class="e" d="M524 76 L542 76" marker-end="url(#ah)"></path>
+          <path class="e" d="M696 76 L714 76" marker-end="url(#ah)"></path>
+          <path class="e" d="M868 76 L886 76" marker-end="url(#ah)"></path>
+          <path class="e" d="M1040 76 L1058 76" marker-end="url(#ah)"></path>
+          <rect class="plaque" x="1042" y="56" width="20" height="13"></rect>
+          <text class="el" x="1044" y="66">yes</text>
+
+          <!-- no-branch bypassing approval -->
+          <path class="e" d="M965 106 L965 140 L1137 140 L1137 160" marker-end="url(#ah)"></path>
+          <rect class="plaque" x="970" y="133" width="18" height="13"></rect>
+          <text class="el" x="972" y="143">no</text>
+          <path class="e" d="M1137 106 L1137 140"></path>
+
+          <!-- Row 2 -->
+          <rect class="box crm" x="1062" y="166" width="150" height="60" rx="5"></rect>
+          <text class="t" x="1137" y="192" text-anchor="middle">Booking</text>
+          <text class="s" x="1137" y="208" text-anchor="middle">10% token, payment link</text>
+
+          <rect class="box dms" x="890" y="166" width="150" height="60" rx="5"></rect>
+          <text class="t" x="965" y="192" text-anchor="middle">Loan</text>
+          <text class="s" x="965" y="208" text-anchor="middle">docs → sanction → disbursal</text>
+
+          <rect class="box dms" x="718" y="166" width="150" height="60" rx="5"></rect>
+          <text class="t" x="793" y="192" text-anchor="middle">Insurance</text>
+          <text class="s" x="793" y="208" text-anchor="middle">issued per chassis</text>
+
+          <rect class="box dms" x="546" y="166" width="150" height="60" rx="5"></rect>
+          <text class="t" x="621" y="192" text-anchor="middle">Allocate + PDI</text>
+          <text class="s" x="621" y="208" text-anchor="middle">oldest stock, 10 points</text>
+
+          <polygon class="box dec" points="404,166 494,166 524,196 494,226 404,226 374,196"></polygon>
+          <text class="t" x="449" y="192" text-anchor="middle">Every chassis</text>
+          <text class="s" x="449" y="208" text-anchor="middle">insured?</text>
+
+          <rect class="box dms" x="202" y="166" width="150" height="60" rx="5"></rect>
+          <text class="t" x="277" y="192" text-anchor="middle">Dispatch</text>
+          <text class="s" x="277" y="208" text-anchor="middle">gate pass, e-way bill, OTP</text>
+
+          <path class="e" d="M1062 196 L1044 196" marker-end="url(#ah)"></path>
+          <path class="e" d="M890 196 L872 196" marker-end="url(#ah)"></path>
+          <path class="e" d="M718 196 L700 196" marker-end="url(#ah)"></path>
+          <path class="e" d="M546 196 L528 196" marker-end="url(#ah)"></path>
+          <path class="e" d="M374 196 L356 196" marker-end="url(#ah)"></path>
+          <rect class="plaque" x="356" y="176" width="20" height="13"></rect>
+          <text class="el" x="358" y="186">yes</text>
+
+          <path class="e" d="M449 226 L449 252 L793 252 L793 230" marker-end="url(#ah)"></path>
+          <rect class="plaque" x="556" y="245" width="100" height="13"></rect>
+          <text class="el" x="560" y="255">no — insure first</text>
+
+          <!-- Row 3 -->
+          <path class="e" d="M277 226 L277 266 L105 266 L105 282" marker-end="url(#ah)"></path>
+          <rect class="plaque" x="150" y="259" width="76" height="13"></rect>
+          <text class="el" x="154" y="269">OTP to customer</text>
+
+          <rect class="box dms" x="30" y="286" width="150" height="60" rx="5"></rect>
+          <text class="t" x="105" y="312" text-anchor="middle">Handover</text>
+          <text class="s" x="105" y="328" text-anchor="middle">customer enters the OTP</text>
+
+          <rect class="box dms" x="202" y="286" width="150" height="60" rx="5"></rect>
+          <text class="t" x="277" y="306" text-anchor="middle">Written at once</text>
+          <text class="s" x="277" y="321" text-anchor="middle">tax invoice · stock out</text>
+          <text class="s" x="277" y="335" text-anchor="middle">TP issued · telematics on</text>
+
+          <rect class="box dms" x="374" y="286" width="150" height="60" rx="5"></rect>
+          <text class="t" x="449" y="312" text-anchor="middle">Forms 20/21/22</text>
+          <text class="s" x="449" y="328" text-anchor="middle">filed on Vahan</text>
+
+          <polygon class="box dec" points="576,286 666,286 696,316 666,346 576,346 546,316"></polygon>
+          <text class="t" x="621" y="312" text-anchor="middle">Objection</text>
+          <text class="s" x="621" y="328" text-anchor="middle">raised?</text>
+
+          <rect class="box dms" x="718" y="286" width="150" height="60" rx="5"></rect>
+          <text class="t" x="793" y="312" text-anchor="middle">Registered</text>
+          <text class="s" x="793" y="328" text-anchor="middle">number → HSRP → RC</text>
+
+          <path class="e" d="M180 316 L198 316" marker-end="url(#ah)"></path>
+          <path class="e" d="M352 316 L370 316" marker-end="url(#ah)"></path>
+          <path class="e" d="M524 316 L542 316" marker-end="url(#ah)"></path>
+          <path class="e" d="M696 316 L714 316" marker-end="url(#ah)"></path>
+          <rect class="plaque" x="698" y="296" width="18" height="13"></rect>
+          <text class="el" x="700" y="306">no</text>
+
+          <path class="e" d="M621 346 L621 372 L449 372 L449 350" marker-end="url(#ah)"></path>
+          <rect class="plaque" x="492" y="365" width="86" height="13"></rect>
+          <text class="el" x="496" y="375">yes — answer it</text>
+        </svg>
+      </div>
+      <div class="legend">
+        <span><i class="sw" style="background:color-mix(in srgb,var(--crm) 22%,transparent);border-color:var(--crm)"></i>CRM</span>
+        <span><i class="sw" style="background:color-mix(in srgb,var(--dms) 22%,transparent);border-color:var(--dms)"></i>DMS</span>
+        <span><i class="sw" style="background:color-mix(in srgb,var(--erp) 22%,transparent);border-color:var(--erp)"></i>ERP</span>
+        <span><i class="sw d" style="background:color-mix(in srgb,var(--dec) 22%,transparent);border-color:var(--dec)"></i>Decision</span>
+      </div>
+      <p class="cap"><b>The temporary registration runs a clock.</b> It is valid one month from handover and is counted down on screen, which is what forces the Vahan file to be closed rather than left open.</p>
+      <p class="cap"><b>Dispatch is a gate, not a button.</b> It is refused outright while any vehicle on the booking is uninsured, and refused again if the e-way bill connector is down — because the paperwork that must travel with the vehicle cannot be raised.</p>
+    </div>
+  </section>
+
+  <section id="supply">
+    <div class="shead"><span class="snum">03</span><h2>Supply: order to dealer stock</h2></div>
+    <p class="sub">How vehicles reach the dealer the retail flow sells from. Three checks sit in front of every order — compliance, credit, and whether stock actually exists.</p>
+
+    <div class="plate">
+      <div class="scroller">
+        <svg class="fc w-xl" viewBox="0 0 1240 300" role="img" aria-labelledby="supT supD">
+          <title id="supT">Dealer supply flow</title>
+          <desc id="supD">Dealer order from placement through compliance, credit and stock checks to dispatch and receipt.</desc>
+
+          <rect class="box dms" x="30" y="46" width="150" height="60" rx="5"></rect>
+          <text class="t" x="105" y="72" text-anchor="middle">Dealer live</text>
+          <text class="s" x="105" y="88" text-anchor="middle">agreement signed</text>
+
+          <rect class="box dms" x="202" y="46" width="150" height="60" rx="5"></rect>
+          <text class="t" x="277" y="72" text-anchor="middle">Order placed</text>
+          <text class="s" x="277" y="88" text-anchor="middle">model, variant, quantity</text>
+
+          <polygon class="box dec" points="404,46 494,46 524,76 494,106 404,106 374,76"></polygon>
+          <text class="t" x="449" y="72" text-anchor="middle">Licence or</text>
+          <text class="s" x="449" y="88" text-anchor="middle">agreement expired?</text>
+
+          <polygon class="box dec" points="576,46 666,46 696,76 666,106 576,106 546,76"></polygon>
+          <text class="t" x="621" y="72" text-anchor="middle">Over the</text>
+          <text class="s" x="621" y="88" text-anchor="middle">credit limit?</text>
+
+          <polygon class="box dec" points="748,46 838,46 868,76 838,106 748,106 718,76"></polygon>
+          <text class="t" x="793" y="72" text-anchor="middle">Free stock</text>
+          <text class="s" x="793" y="88" text-anchor="middle">covers every line?</text>
+
+          <rect class="box dms" x="890" y="46" width="150" height="60" rx="5"></rect>
+          <text class="t" x="965" y="72" text-anchor="middle">Acknowledged</text>
+          <text class="s" x="965" y="88" text-anchor="middle">those vehicles reserved</text>
+
+          <rect class="box dms" x="1062" y="46" width="150" height="60" rx="5"></rect>
+          <text class="t" x="1137" y="72" text-anchor="middle">Dispatch</text>
+          <text class="s" x="1137" y="88" text-anchor="middle">in transit to the dealer</text>
+
+          <path class="e" d="M180 76 L198 76" marker-end="url(#ah)"></path>
+          <path class="e" d="M352 76 L370 76" marker-end="url(#ah)"></path>
+          <path class="e" d="M524 76 L542 76" marker-end="url(#ah)"></path>
+          <rect class="plaque" x="526" y="56" width="18" height="13"></rect>
+          <text class="el" x="528" y="66">no</text>
+          <path class="e" d="M696 76 L714 76" marker-end="url(#ah)"></path>
+          <rect class="plaque" x="698" y="56" width="18" height="13"></rect>
+          <text class="el" x="700" y="66">no</text>
+          <path class="e" d="M868 76 L886 76" marker-end="url(#ah)"></path>
+          <rect class="plaque" x="870" y="56" width="20" height="13"></rect>
+          <text class="el" x="872" y="66">yes</text>
+          <path class="e" d="M1040 76 L1058 76" marker-end="url(#ah)"></path>
+
+          <rect class="box stop" x="374" y="186" width="150" height="60" rx="5"></rect>
+          <text class="t" x="449" y="212" text-anchor="middle">Refused</text>
+          <text class="s" x="449" y="228" text-anchor="middle">dealer on compliance hold</text>
+
+          <rect class="box erp" x="546" y="186" width="150" height="60" rx="5"></rect>
+          <text class="t" x="621" y="212" text-anchor="middle">Credit hold</text>
+          <text class="s" x="621" y="228" text-anchor="middle">waits for an approval</text>
+
+          <rect class="box dms" x="718" y="186" width="150" height="60" rx="5"></rect>
+          <text class="t" x="793" y="206" text-anchor="middle">Stock Short</text>
+          <text class="s" x="793" y="221" text-anchor="middle">own tab, ranked best fit</text>
+          <text class="s" x="793" y="235" text-anchor="middle">part ship + back-order</text>
+
+          <rect class="box dms" x="1062" y="186" width="150" height="60" rx="5"></rect>
+          <text class="t" x="1137" y="206" text-anchor="middle">Received</text>
+          <text class="s" x="1137" y="221" text-anchor="middle">dealer's sellable stock —</text>
+          <text class="s" x="1137" y="235" text-anchor="middle">what retail draws on</text>
+
+          <path class="e" d="M449 106 L449 182" marker-end="url(#ah)"></path>
+          <rect class="plaque" x="455" y="137" width="20" height="13"></rect>
+          <text class="el" x="457" y="147">yes</text>
+          <path class="e" d="M621 106 L621 182" marker-end="url(#ah)"></path>
+          <rect class="plaque" x="627" y="137" width="24" height="13"></rect>
+          <text class="el" x="629" y="147">over</text>
+          <path class="e" d="M793 106 L793 182" marker-end="url(#ah)"></path>
+          <rect class="plaque" x="799" y="137" width="18" height="13"></rect>
+          <text class="el" x="801" y="147">no</text>
+          <path class="e" d="M1137 106 L1137 182" marker-end="url(#ah)"></path>
+          <rect class="plaque" x="1143" y="137" width="88" height="13"></rect>
+          <text class="el" x="1145" y="147">invoice + voucher</text>
+
+          <path class="e e-d" d="M621 246 L621 272 L960 272 L960 110" marker-end="url(#ah)"></path>
+          <rect class="plaque" x="700" y="265" width="106" height="13"></rect>
+          <text class="el" x="704" y="275">approved — released</text>
+        </svg>
+      </div>
+      <p class="cap"><b>Dispatch is the moment the money moves.</b> One click raises the GST invoice, adds it to what the dealer owes, moves the reserved vehicles into transit, writes the stock ledger entry and queues the accounting voucher. Rejecting the credit approval cancels the order instead.</p>
+    </div>
+  </section>
+
+  <section id="service">
+    <div class="shead"><span class="snum">04</span><h2>Service and warranty</h2></div>
+    <p class="sub">After-sales starts from the chassis number and finds everything else by itself — the owner, the dealer, the sale, the warranty position. Closing a job card splits the bill in two.</p>
+
+    <div class="plate">
+      <div class="scroller">
+        <svg class="fc w-lg" viewBox="0 0 1240 350" role="img" aria-labelledby="svcT svcD">
+          <title id="svcT">Service and warranty flow</title>
+          <desc id="svcD">Job card opened by chassis number, parts issued, closed into a customer invoice and a warranty claim that the rules engine adjudicates.</desc>
+
+          <rect class="box dms" x="30" y="46" width="150" height="60" rx="5"></rect>
+          <text class="t" x="105" y="72" text-anchor="middle">Chassis number</text>
+          <text class="s" x="105" y="88" text-anchor="middle">owner + history found</text>
+
+          <rect class="box dms" x="202" y="46" width="150" height="60" rx="5"></rect>
+          <text class="t" x="277" y="72" text-anchor="middle">Job card</text>
+          <text class="s" x="277" y="88" text-anchor="middle">complaint, cause, correction</text>
+
+          <rect class="box dms" x="374" y="46" width="150" height="60" rx="5"></rect>
+          <text class="t" x="449" y="72" text-anchor="middle">Parts issued</text>
+          <text class="s" x="449" y="88" text-anchor="middle">straight off spare stock</text>
+
+          <rect class="box dms" x="546" y="46" width="150" height="60" rx="5"></rect>
+          <text class="t" x="621" y="72" text-anchor="middle">Closed</text>
+          <text class="s" x="621" y="88" text-anchor="middle">each line billed to someone</text>
+
+          <rect class="box erp" x="718" y="46" width="150" height="60" rx="5"></rect>
+          <text class="t" x="793" y="66" text-anchor="middle">Customer share</text>
+          <text class="s" x="793" y="81" text-anchor="middle">18% GST invoice,</text>
+          <text class="s" x="793" y="95" text-anchor="middle">next service scheduled</text>
+
+          <path class="e" d="M180 76 L198 76" marker-end="url(#ah)"></path>
+          <path class="e" d="M352 76 L370 76" marker-end="url(#ah)"></path>
+          <path class="e" d="M524 76 L542 76" marker-end="url(#ah)"></path>
+          <path class="e" d="M696 76 L714 76" marker-end="url(#ah)"></path>
+
+          <rect class="box dms" x="718" y="166" width="150" height="60" rx="5"></rect>
+          <text class="t" x="793" y="192" text-anchor="middle">Warranty share</text>
+          <text class="s" x="793" y="208" text-anchor="middle">filed as a claim</text>
+
+          <polygon class="box dec" points="920,166 1010,166 1040,196 1010,226 920,226 890,196"></polygon>
+          <text class="t" x="965" y="186" text-anchor="middle">Rules engine</text>
+          <text class="s" x="965" y="201" text-anchor="middle">time · km · battery SoH</text>
+          <text class="s" x="965" y="214" text-anchor="middle">charger · duplicate</text>
+
+          <rect class="box dms" x="1062" y="166" width="150" height="60" rx="5"></rect>
+          <text class="t" x="1137" y="192" text-anchor="middle">Approved</text>
+          <text class="s" x="1137" y="208" text-anchor="middle">in full or in part</text>
+
+          <path class="e" d="M621 106 L621 196 L714 196" marker-end="url(#ah)"></path>
+          <rect class="plaque" x="628" y="150" width="78" height="13"></rect>
+          <text class="el" x="632" y="160">warranty share</text>
+          <path class="e" d="M868 196 L886 196" marker-end="url(#ah)"></path>
+          <path class="e" d="M1040 196 L1058 196" marker-end="url(#ah)"></path>
+
+          <rect class="box stop" x="890" y="266" width="150" height="60" rx="5"></rect>
+          <text class="t" x="965" y="292" text-anchor="middle">Rejected</text>
+          <text class="s" x="965" y="308" text-anchor="middle">or more information asked</text>
+
+          <rect class="box erp" x="1062" y="266" width="150" height="60" rx="5"></rect>
+          <text class="t" x="1137" y="286" text-anchor="middle">Settled</text>
+          <text class="s" x="1137" y="301" text-anchor="middle">credit note to the dealer,</text>
+          <text class="s" x="1137" y="315" text-anchor="middle">recovery from the supplier</text>
+
+          <path class="e" d="M965 226 L965 262" marker-end="url(#ah)"></path>
+          <path class="e" d="M1137 226 L1137 262" marker-end="url(#ah)"></path>
+        </svg>
+      </div>
+      <p class="cap"><b>The claim is judged on arrival, not in a queue.</b> Where the dealer supplies no odometer or battery reading, the rules engine takes the telematics reading from the vehicle itself.</p>
+    </div>
+  </section>
+
+  <section id="outside">
+    <div class="shead"><span class="snum">05</span><h2>Outside systems</h2></div>
+    <p class="sub">Nine connectors, each with its own on/off switch and traffic log. Opening one on the API Integrations screen now shows what that third-party system is, in plain terms. Switch one off and the flows above fail where they would really fail.</p>
+
+    <div class="conns">
+      <div class="conn">
+        <h3>WhatsApp Business</h3><span class="prov">Meta WhatsApp Cloud API</span>
+        <p>Quotations, handover codes, service reminders and ticket replies. Business-initiated messages need a Meta-approved template; a customer reply opens a 24-hour free-form window.</p>
+      </div>
+      <div class="conn">
+        <h3>Transactional SMS</h3><span class="prov">DLT-registered route</span>
+        <p>The fallback when WhatsApp cannot deliver. TRAI requires the sender, the six-character header and every template to be registered on DLT before anything sends.</p>
+      </div>
+      <div class="conn">
+        <h3>Payment gateway</h3><span class="prov">Deployment's choice</span>
+        <p>Booking tokens and dealer collections. The platform sends a link and never touches card details; the gateway's capture callback is what marks a booking paid.</p>
+      </div>
+      <div class="conn">
+        <h3>Telematics</h3><span class="prov">Unit fitted at handover</span>
+        <p>Odometer, location, battery charge and state of health. These readings are what the warranty rules engine uses when a dealer supplies none.</p>
+      </div>
+      <div class="conn">
+        <h3>Tally Prime</h3><span class="prov">Accounting</span>
+        <p>Every invoice, receipt, credit note and payout queues a voucher. It posts only when the connection is up and every ledger it touches is mapped; otherwise it waits with its reason.</p>
+      </div>
+      <div class="conn">
+        <h3>Vahan</h3><span class="prov">Parivahan — Vahan 4.0 dealer point</span>
+        <p>Registration filed by the dealer: Forms 20, 21 and 22 with insurance, invoice and address proof. The number it returns is written back onto the vehicle.</p>
+      </div>
+      <div class="conn">
+        <h3>GST e-invoice</h3><span class="prov">NIC Invoice Registration Portal</span>
+        <p>Registers business-to-business tax invoices and returns the reference number and QR code. Retail sales to a customer without a GSTIN need none.</p>
+      </div>
+      <div class="conn">
+        <h3>E-way bill</h3><span class="prov">NIC E-Way Bill portal</span>
+        <p>Required before a vehicle can be dispatched. Where the invoice already carries its e-invoice reference, the bill is generated from it rather than re-keyed.</p>
+      </div>
+      <div class="conn">
+        <h3>Customer ticketing<span class="new">New</span></h3><span class="prov">Raiseaticket</span>
+        <p>A cloud-hosted helpdesk for support tickets. Email becomes a ticket and replies thread onto it; tickets carry a priority, an SLA and a department, and escalate when the clock runs out — the behaviour Customer Support &amp; Ticketing mirrors.</p>
+      </div>
+    </div>
+    <p class="cap"><b>All nine are simulated in this build.</b> Nothing leaves the application, but each connector behaves as the real one would, including its failure modes — messages bounce, filings are refused, vouchers queue.</p>
+  </section>
+
+  <section id="modules">
+    <div class="shead"><span class="snum">06</span><h2>Every module</h2></div>
+    <p class="sub">All 32 are built and working on real data. Three are marked: the screens work, the work on them is not finished, and they carry the same marker inside the product.</p>
+
+    <div class="domain d-crm">
+      <header><h3>Customer relationship management</h3><span class="n">12</span></header>
+      <div class="mods">
+        <span class="grp">Lead capture &amp; tracking</span>
+        <div class="mod"><b>Lead Master</b><span>Every lead from any source, scored on how complete and contactable it is.</span></div>
+        <div class="mod"><b>Unassigned Leads</b><span>Captured but not yet routed to a dealer or a salesperson.</span></div>
+        <div class="mod"><b>Assigned Leads</b><span>Leads with an owner, tracked against response time and next action.</span></div>
+        <div class="mod"><b>Segments</b><span>Saved audience definitions, counted live so they cannot go stale.</span></div>
+        <span class="grp">Enquiries, demos &amp; pipeline</span>
+        <div class="mod"><b>Enquiry Management</b><span>Inbound product and price enquiries from the website, calls and walk-ins.</span></div>
+        <div class="mod"><b>Test Drive Scheduling</b><span>Demo-vehicle slots per dealer, licence checked before the keys, feedback onto the lead.</span></div>
+        <div class="mod"><b>Pipeline Board</b><span>Deals by stage, with value and ageing, across the network.</span></div>
+        <div class="mod"><b>Bookings</b><span>Token amounts, waiting on finance, completed only by a real handover.</span></div>
+        <span class="grp">Marketing &amp; service</span>
+        <div class="mod"><b>Customer Follow-ups</b><span>Scheduled calls, visits and reminders against leads, bookings and service.</span></div>
+        <div class="mod"><b>Campaign Master</b><span>WhatsApp and SMS campaigns to a saved segment, measured from the message log.</span></div>
+        <div class="mod"><b>Landing Pages</b><span>Public capture pages, their traffic, and the leads and bookings they produced.</span></div>
+        <div class="mod"><b>Customer Support &amp; Ticketing<span class="wip">Unfinished</span></b><span>Tickets from every channel on priority SLAs, escalated to the regional manager, closed with a satisfaction score.</span></div>
+      </div>
+    </div>
+
+    <div class="domain d-dms">
+      <header><h3>Dealer management</h3><span class="n">15</span></header>
+      <div class="mods">
+        <span class="grp">Onboarding</span>
+        <div class="mod"><b>Onboarding Pipeline</b><span>Applications stage by stage to a signed agreement, each stage gated on verified documents.</span></div>
+        <div class="mod"><b>Digital KYC &amp; Verification</b><span>Document-by-document verification for every application in the pipeline.</span></div>
+        <span class="grp">Dealer network</span>
+        <div class="mod"><b>Dealer 360</b><span>Tier, territory, targets, what each dealer owes and account health, with a page per dealer.</span></div>
+        <div class="mod"><b>Compliance &amp; Renewals</b><span>Licences, GST, agreements and insurance with expiry tracking. An expiry blocks new orders.</span></div>
+        <span class="grp">Inventory</span>
+        <div class="mod"><b>Vehicle Stock</b><span>Stock down to the individual vehicle, by model, location and status.</span></div>
+        <div class="mod"><b>Spare Parts Inventory</b><span>Parts stock, reorder levels, dealer parts orders, receipts and physical counts.</span></div>
+        <div class="mod"><b>Inventory Logs</b><span>Every movement with the document that caused it. Read-only.</span></div>
+        <span class="grp">Sale, billing &amp; delivery</span>
+        <div class="mod"><b>Quotation &amp; GST Invoicing<span class="wip">Unfinished</span></b><span>Quotations off the price list, taxed by place of supply, converting into bookings and tax invoices.</span></div>
+        <div class="mod"><b>Order Management</b><span>Dealer orders from placement to receipt — lines, stock check, dispatch and the invoice it raises.</span></div>
+        <div class="mod"><b>Billing &amp; Invoices</b><span>Receivables — ageing, statements, credit limits and holds, receipts, credit notes, reminders.</span></div>
+        <div class="mod"><b>Vehicle Delivery</b><span>Allocation, inspection per vehicle, gate pass and e-way bill, handover confirmed by one-time code.</span></div>
+        <div class="mod"><b>Finance &amp; Insurance</b><span>Loans across the lender panel to disbursal, insurance per vehicle, dealer payouts and commission.</span></div>
+        <div class="mod"><b>RTO &amp; Registration<span class="wip">Unfinished</span></b><span>Temporary registration at handover, the Form 20/21/22 file, Vahan filing, permanent number.</span></div>
+        <span class="grp">Service &amp; warranty</span>
+        <div class="mod"><b>Service Job Cards</b><span>Complaint, cause, correction, parts off stock — billed, claimed and scheduled.</span></div>
+        <div class="mod"><b>Warranty Claims</b><span>Component-level claims, automatic adjudication, dealer reimbursement, supplier recovery.</span></div>
+      </div>
+    </div>
+
+    <div class="domain d-erp">
+      <header><h3>ERP &amp; core integrations</h3><span class="n">5</span></header>
+      <div class="mods">
+        <div class="mod"><b>Document Management</b><span>Every KYC file, agreement and invoice in one register.</span></div>
+        <div class="mod"><b>Role-Based Access &amp; Approvals</b><span>Who can see what, and which discount, credit, warranty and onboarding approvals wait on whom.</span></div>
+        <div class="mod"><b>Dashboards, MIS &amp; Analytics</b><span>Sales, stock, collections and service, calculated from the same records the screens show.</span></div>
+        <div class="mod"><b>ERP / Accounting Integration</b><span>Vouchers for every money movement, with ledger mapping, replay and reconciliation.</span></div>
+        <div class="mod"><b>API Integrations</b><span>The nine connectors, what each outside system is, and their traffic logs.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="rules">
+    <div class="shead"><span class="snum">07</span><h2>Where the rules come from</h2></div>
+    <p class="sub">The figures the flows above calculate are not invented. Each traces to published law, a government notification, or Luxus Green's own pages.</p>
+    <table class="rules">
+      <thead><tr><th>Rule</th><th>Source</th></tr></thead>
+      <tbody>
+        <tr><td>5% GST on vehicles, 18% on parts and labour; state-split tax; reference numbers for business buyers</td><td>GST law</td></tr>
+        <tr><td>Temporary registration valid one month; Forms 20, 21 and 22; battery vehicles exempt from registration fee and permits; green plates</td><td>Central Motor Vehicles Rules</td></tr>
+        <tr><td>E-rickshaw and e-cart subsidy of ₹2,500 per kWh capped at ₹12,500, to 31 March 2028; the larger category closed 26 December 2025</td><td>Ministry of Heavy Industries notifications</td></tr>
+        <tr><td>Models and their motor, battery, range, payload and seating; the 3-year / 80,000 km warranty</td><td>Luxus Green product pages</td></tr>
+        <tr><td>Ten-lender panel, rates from 9.5%, 10% down, 12–60 month terms, sanction in 48–72 hours</td><td>Luxus Green finance page — the EMI calculation reproduces its worked example</td></tr>
+        <tr><td>Free-service schedule, labour rate, SLA hours, the 3% discount limit, insurance premiums</td><td>The platform's own policy, labelled as such on screen wherever it is used</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <footer>
+    <span>EV Dealer Operations Platform</span>
+    <span>32 modules · 42 record types · 9 connectors</span>
+    <span>Project documentation</span>
+  </footer>
+
+</div>
+
+<script>
+  (function () {
+    var btn = document.getElementById('theme');
+    var root = document.documentElement;
+    function current() {
+      var set = root.getAttribute('data-theme');
+      if (set === 'dark' || set === 'light') return set;
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    function paint() {
+      var dark = current() === 'dark';
+      btn.textContent = dark ? 'Light' : 'Dark';
+      btn.setAttribute('aria-pressed', dark ? 'true' : 'false');
+      btn.setAttribute('aria-label', dark ? 'Switch to light theme' : 'Switch to dark theme');
+    }
+    try {
+      var saved = localStorage.getItem('evdoc-theme');
+      if (saved === 'dark' || saved === 'light') root.setAttribute('data-theme', saved);
+    } catch (e) {}
+    paint();
+    btn.addEventListener('click', function () {
+      var next = current() === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      try { localStorage.setItem('evdoc-theme', next); } catch (e) {}
+      paint();
+    });
+    try { window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', paint); } catch (e) {}
+  })();
+</script>
+</body>
+</html>
