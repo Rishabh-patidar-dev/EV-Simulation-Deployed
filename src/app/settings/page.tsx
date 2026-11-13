@@ -6,7 +6,7 @@ import { Pill } from "@/components/ui/primitives";
 import { OPERATOR, initials } from "@/lib/operator";
 import { effectivePermissions } from "@/lib/permissions";
 import { buildNotifications } from "@/server/notifications";
-import { readCollection } from "@/server/store";
+import { databaseBackend, readCollection } from "@/server/store";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +22,7 @@ const SHORTCUTS: Array<{ keys: string[]; label: string }> = [
  * the workspace reads and writes its data.
  */
 export default async function SettingsPage() {
+  const dataSource = DATA_SOURCES[databaseBackend()];
   const [notifications, users] = await Promise.all([buildNotifications(), readCollection("users")]);
   const me = users.rows.find((u) => u.email.toLowerCase() === OPERATOR.email);
 
@@ -89,12 +90,11 @@ export default async function SettingsPage() {
       <Section id="workspace" title="Workspace" description="Applies to everyone using this deployment.">
         <Panel title="Data source" description="Where screens read from and where changes are written.">
           <dl className="space-y-2.5 text-[12.5px]">
-            <Fact label="Reads" value="Supabase — sim_* tables" />
-            <Fact label="Writes" value="Supabase" />
+            <Fact label="Reads" value={dataSource.reads} />
+            <Fact label="Writes" value={dataSource.writes} />
           </dl>
           <p className="mt-3 text-[12px] leading-relaxed" style={{ color: "var(--fg-muted)" }}>
-            Every screen reads the shared Supabase project and every change is saved there, in sim_* tables kept apart from the CRM&apos;s
-            own. There is no other copy of the data.
+            {dataSource.note}
           </p>
         </Panel>
       </Section>
@@ -145,3 +145,21 @@ function Fact({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
+const DATA_SOURCES = {
+  supabase: {
+    reads: "Supabase — sim_* tables",
+    writes: "Supabase",
+    note: "Every screen reads the shared Supabase project and every change is saved there, in sim_* tables kept apart from the CRM's own. There is no other copy of the data.",
+  },
+  postgres: {
+    reads: "Postgres — sim_* tables",
+    writes: "Postgres",
+    note: "Every screen reads the sim_* tables in the configured Postgres database (DATABASE_URL) and every change is saved there.",
+  },
+  memory: {
+    reads: "Built-in demo data",
+    writes: "Server memory",
+    note: "No database is configured, so the demo runs on built-in sample data. Changes are kept until the server restarts, then the demo starts fresh.",
+  },
+} as const;

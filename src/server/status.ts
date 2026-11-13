@@ -30,7 +30,8 @@ export function buildSystemStatus(database: "ok" | StoreFailure): StatusGroup[] 
 function dataEntries(database: "ok" | StoreFailure): StatusEntry[] {
   switch (database) {
     case "ok": {
-      const label = databaseBackend() === "postgres" ? "Postgres" : "Supabase";
+      const backend = databaseBackend();
+      const label = backend === "postgres" ? "Postgres" : backend === "memory" ? "Built-in demo data" : "Supabase";
       return [
         { id: "reads", label: "Reads", level: "healthy", detail: label, tooltip: "Every screen is reading the sim_* tables." },
         { id: "writes", label: "Writes", level: "healthy", detail: label, tooltip: "Changes are saved to the sim_* tables." },
