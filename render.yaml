@@ -1,6 +1,7 @@
 # Render Blueprint for the EV simulation (Next.js, server-rendered).
-# The two Supabase values are secrets: enter them in the Render dashboard
-# (Environment tab), never in this file.
+# Data: either Supabase (SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY) or plain
+# Postgres (DATABASE_URL, here the Render database below). Supabase wins when
+# both are set.
 services:
   - type: web
     name: ev-simulation
@@ -8,18 +9,20 @@ services:
     plan: free
     region: oregon
     branch: main
-    # When DATABASE_URL is set, also create any missing sim_* tables
-    # (idempotent, see scripts/db-setup.ts). Without it, the step is skipped.
-    buildCommand: npm ci && npm run build && if [ -n "$DATABASE_URL" ]; then npm run db:setup; fi
+    # The app creates any missing sim_* tables itself on first request.
+    buildCommand: npm ci && npm run build
     # package.json pins port 3003 for local demos; Render supplies $PORT.
     startCommand: npx next start -p $PORT
     healthCheckPath: /favicon.ico
     envVars:
       - key: NODE_VERSION
         value: "22"
-      - key: SUPABASE_URL
-        sync: false
-      - key: SUPABASE_SERVICE_ROLE_KEY
-        sync: false
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: ev-simulation-db
+          property: connectionString
+
+databases:
+  - name: ev-simulation-db
+    plan: free
+    region: oregon

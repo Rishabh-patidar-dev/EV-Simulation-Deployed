@@ -1,6 +1,6 @@
 import "server-only";
 import type { StatusEntry, StatusGroup } from "@/lib/status";
-import type { StoreFailure } from "./store";
+import { databaseBackend, type StoreFailure } from "./store";
 
 /**
  * What the status menu reports. Only derived facts cross to the client —
@@ -29,14 +29,16 @@ export function buildSystemStatus(database: "ok" | StoreFailure): StatusGroup[] 
 
 function dataEntries(database: "ok" | StoreFailure): StatusEntry[] {
   switch (database) {
-    case "ok":
+    case "ok": {
+      const label = databaseBackend() === "postgres" ? "Postgres" : "Supabase";
       return [
-        { id: "reads", label: "Reads", level: "healthy", detail: "Supabase", tooltip: "Every screen is reading the sim_* tables." },
-        { id: "writes", label: "Writes", level: "healthy", detail: "Supabase", tooltip: "Changes are saved to the sim_* tables." },
+        { id: "reads", label: "Reads", level: "healthy", detail: label, tooltip: "Every screen is reading the sim_* tables." },
+        { id: "writes", label: "Writes", level: "healthy", detail: label, tooltip: "Changes are saved to the sim_* tables." },
       ];
+    }
     case "not-configured":
       return [
-        { id: "reads", label: "Database", level: "warning", detail: "Not configured", tooltip: "Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env, then restart the app." },
+        { id: "reads", label: "Database", level: "warning", detail: "Not configured", tooltip: "Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY, or DATABASE_URL, then restart the app." },
       ];
     case "missing-table":
       return [

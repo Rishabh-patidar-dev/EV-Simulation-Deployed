@@ -1,7 +1,9 @@
 import "server-only";
 import { cache } from "react";
 import type { PostgrestError, SupabaseClient } from "@supabase/supabase-js";
+import type pg from "pg";
 import { getSupabase, TABLE_PREFIX } from "./supabase";
+import { ensureSchema, getPostgres, quoteTable } from "./postgres";
 import type { CollectionName, Dataset } from "./types";
 
 /**
@@ -45,8 +47,34 @@ function refused(action: string, table: string, error: PostgrestError): StoreErr
 
 function database(): SupabaseClient {
   const supabase = getSupabase();
-  if (!supabase) throw new StoreError("The database is not configured — set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env.", "not-configured");
+  if (!supabase) throw new StoreError("The database is not configured — set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY (or DATABASE_URL) in .env.", "not-configured");
   return supabase;
+}
+
+/**
+ * Which backend serves the data: Supabase when its keys are set, otherwise a
+ * direct Postgres connection when DATABASE_URL is set (see ./postgres.ts).
+ */
+export function databaseBackend(): "supabase" | "postgres" | null {
+  if (getSupabase()) return "supabase";
+  if (getPostgres()) return "postgres";
+  return null;
+}
+
+const usePostgres = () => !getSupabase() && getPostgres() !== null;
+
+/** Runs a query on the Postgres backend, after making sure the tables exist. */
+async function pgQuery<R extends pg.QueryResultRow = pg.QueryResultRow>(action: string, table: string, text: string, values: unknown[] = []): Promise<pg.QueryResult<R>> {
+  const db = getPostgres();
+  if (!db) throw new StoreError("The database is not configured — set DATABASE_URL in .env.", "not-configured");
+  try {
+    await ensureSchema(db);
+    return await db.query<R>(text, values);
+  } catch (error) {
+    const err = error as { code?: string; message?: string };
+    if (err.code === "42P01") throw new StoreError(`${table} does not exist — run npm run db:setup to create the tables.`, "missing-table");
+    throw new StoreError(`Could not ${action} ${table}: ${err.message ?? String(error)}`, "refused");
+  }
 }
 
 /**
@@ -91,8 +119,12 @@ const PAGE = 1000;
  * collection during one render share a single request.
  */
 const fetchTable = cache(async (name: CollectionName): Promise<unknown[]> => {
-  const supabase = database();
   const table = `${TABLE_PREFIX}${name}`;
+  if (usePostgres()) {
+    const { rows } = await pgQuery<{ data: unknown }>("read", table, `select data from ${quoteTable(table)} order by created_at desc, id asc`);
+    return rows.map((row) => row.data);
+  }
+  const supabase = database();
   const rows: unknown[] = [];
 
   for (let from = 0; ; from += PAGE) {
@@ -139,6 +171,11 @@ async function write(
 
 /** Adds a new row. */
 export async function insertRow<K extends CollectionName>(name: K, row: Dataset[K][number] & { id: string }): Promise<void> {
+  if (usePostgres()) {
+    const table = `${TABLE_PREFIX}${name}`;
+    await pgQuery("save to", table, `insert into ${quoteTable(table)} (id, data) values ($1, $2::jsonb)`, [row.id, JSON.stringify(row)]);
+    return;
+  }
   await write(name, "save to", (t) => t.insert({ id: row.id, data: row }));
 }
 
@@ -152,8 +189,16 @@ export async function updateRow<K extends CollectionName>(
   id: string,
   patch: Partial<Dataset[K][number]>
 ): Promise<Dataset[K][number] | null> {
-  const supabase = database();
   const table = `${TABLE_PREFIX}${name}`;
+  if (usePostgres()) {
+    // Same merge as the Supabase path (a key patched to undefined is dropped).
+    const { rows } = await pgQuery<{ data: object }>("read", table, `select data from ${quoteTable(table)} where id = $1`, [id]);
+    if (!rows[0]) return null;
+    const updated = { ...rows[0].data, ...patch } as Dataset[K][number];
+    await pgQuery("update", table, `update ${quoteTable(table)} set data = $2::jsonb where id = $1`, [id, JSON.stringify(updated)]);
+    return updated;
+  }
+  const supabase = database();
   const { data, error } = await withRetry("read", () => supabase.from(table).select("data").eq("id", id).abortSignal(unmemoized()).maybeSingle());
   if (error) throw refused("read", table, error);
   if (!data) return null;
@@ -170,6 +215,19 @@ export async function updateRow<K extends CollectionName>(
  * grows. The caller passes complete rows, so nothing is merged here.
  */
 export async function upsertRows<K extends CollectionName>(name: K, rows: readonly (Dataset[K][number] & { id: string })[]): Promise<void> {
+  if (usePostgres()) {
+    const table = `${TABLE_PREFIX}${name}`;
+    for (let from = 0; from < rows.length; from += PAGE) {
+      const batch = rows.slice(from, from + PAGE);
+      await pgQuery(
+        "save to",
+        table,
+        `insert into ${quoteTable(table)} (id, data) select * from unnest($1::text[], $2::jsonb[]) on conflict (id) do update set data = excluded.data`,
+        [batch.map((row) => row.id), batch.map((row) => JSON.stringify(row))]
+      );
+    }
+    return;
+  }
   for (let from = 0; from < rows.length; from += PAGE) {
     const batch = rows.slice(from, from + PAGE).map((row) => ({ id: row.id, data: row }));
     await write(name, "save to", (t) => t.upsert(batch, { onConflict: "id" }));
@@ -178,5 +236,10 @@ export async function upsertRows<K extends CollectionName>(name: K, rows: readon
 
 /** Removes a row by id. */
 export async function deleteRow<K extends CollectionName>(name: K, id: string): Promise<void> {
+  if (usePostgres()) {
+    const table = `${TABLE_PREFIX}${name}`;
+    await pgQuery("delete from", table, `delete from ${quoteTable(table)} where id = $1`, [id]);
+    return;
+  }
   await write(name, "delete from", (t) => t.delete().eq("id", id));
 }
